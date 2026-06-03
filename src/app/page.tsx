@@ -4,17 +4,21 @@ import { useState, useEffect, useMemo } from 'react';
 import type { ProductsResponse, Product } from '@/lib/types';
 
 const BRANDS = [
-  { id: 'cxxt', name: '超星学习通', kw: '超星学习通', icon: '📚', color: 'from-blue-500 to-blue-600',
-    courseHints: ['超星学习通(直播课)','超星学习通(积分课)','强制全部做一遍','允许重做作业','重考一次','不要做作业','只刷视频','保留考试','忽略考试','人脸考试'] },
-  { id: 'uxy', name: 'u校园', kw: ['u校园', '-u校园AI'], icon: '🎓', color: 'from-emerald-500 to-teal-600',
-    courseHints: ['整本','分单元','班级测试','单元测试','必修单元','选修单元','控分查课'] },
-  { id: 'uxyai', name: 'u校园 AI 版', kw: 'u校园AI', icon: '🤖', color: 'from-violet-500 to-purple-600',
-    courseHints: ['AI整本','AI单元','AI版班级测试','AI版班测','整本','单元','班测'] },
-  { id: 'mooc', name: '中国大学 MOOC', kw: '中国大学MOOC', icon: '🏛', color: 'from-orange-500 to-red-500',
-    courseHints: ['慕课号','爱课程','全包','补时长','自动更新','保留作答机会','互评'] },
-  { id: 'xuetangx', name: '学堂在线', kw: '学堂在线', icon: '💻', color: 'from-cyan-500 to-blue-600',
-    courseHints: ['全包','单视频','单考试','课件+讨论+作业+考试'] },
+  { id: 'cxxt', name: '超星学习通', kw: '超星学习通', icon: '📚', color: 'from-blue-500 to-blue-600' },
+  { id: 'uxy', name: 'u校园', kw: ['u校园', '-u校园AI'], icon: '🎓', color: 'from-emerald-500 to-teal-600' },
+  { id: 'uxyai', name: 'u校园 AI 版', kw: 'u校园AI', icon: '🤖', color: 'from-violet-500 to-purple-600' },
+  { id: 'mooc', name: '中国大学 MOOC', kw: '中国大学MOOC', icon: '🏛', color: 'from-orange-500 to-red-500' },
+  { id: 'xuetangx', name: '学堂在线', kw: '学堂在线', icon: '💻', color: 'from-cyan-500 to-blue-600' },
 ];
+
+// 课程数据类型
+interface CourseItem {
+  kcid?: string | number;
+  kcname?: string;
+  name?: string;
+  id?: string | number;
+  [key: string]: unknown;
+}
 
 function matchBrand(name: string, brand: typeof BRANDS[0]): boolean {
   if (Array.isArray(brand.kw)) {
@@ -37,7 +41,9 @@ export default function Home() {
   const [password, setPassword] = useState('');
   const [course, setCourse] = useState('');
   const [showCourseSearch, setShowCourseSearch] = useState(false);
-  const [courseFilter, setCourseFilter] = useState('');
+  const [courseLoading, setCourseLoading] = useState(false);
+  const [courseResults, setCourseResults] = useState<CourseItem[]>([]);
+  const [courseError, setCourseError] = useState('');
 
   const [step, setStep] = useState<'form' | 'confirm' | 'result'>('form');
   const [submitting, setSubmitting] = useState(false);
@@ -80,22 +86,37 @@ export default function Home() {
     finally { setSubmitting(false); setStep('result'); }
   };
 
-  const openProduct = (p: Product) => {
-    setSelectedProduct(p); setSchool(''); setAccount(''); setPassword(''); setCourse('');
-    setShowCourseSearch(false); setCourseFilter(''); setStep('form'); setOrderResult(null);
+  // 搜索课程
+  const searchCourses = async () => {
+    if (!selectedProduct || !account.trim() || !password.trim()) return;
+    setShowCourseSearch(true);
+    setCourseLoading(true);
+    setCourseError('');
+    setCourseResults([]);
+    try {
+      const res = await fetch('/api/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cid: selectedProduct.cid, account: account.trim(), password: password.trim(), school: school.trim() }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setCourseResults(result.courses || []);
+      } else {
+        setCourseError(result.error || '查询失败');
+      }
+    } catch {
+      setCourseError('网络错误');
+    } finally {
+      setCourseLoading(false);
+    }
   };
 
-  // 当前品牌课程提示
-  const currentBrandHints = useMemo(() => {
-    if (!selectedProduct) return [];
-    const brand = BRANDS.find(b => matchBrand(selectedProduct.name, b));
-    return brand?.courseHints || [];
-  }, [selectedProduct]);
-
-  const filteredHints = useMemo(() => {
-    if (!courseFilter) return currentBrandHints;
-    return currentBrandHints.filter(h => h.toLowerCase().includes(courseFilter.toLowerCase()));
-  }, [currentBrandHints, courseFilter]);
+  const openProduct = (p: Product) => {
+    setSelectedProduct(p); setSchool(''); setAccount(''); setPassword(''); setCourse('');
+    setShowCourseSearch(false); setCourseResults([]); setCourseError('');
+    setStep('form'); setOrderResult(null);
+  };
 
   const currentBrand = BRANDS.find(b => b.id === activeBrand);
 
@@ -180,14 +201,6 @@ export default function Home() {
             <div className="px-6 py-4">
               {step === 'form' && (
                 <>
-                  {selectedProduct.content && (
-                    <details className="mb-5 group">
-                      <summary className="p-3 bg-amber-50 rounded-xl text-xs text-amber-800 cursor-pointer font-medium select-none">📋 下单说明（点击展开）</summary>
-                      <div className="mt-2 p-3 bg-amber-50 rounded-xl text-xs text-amber-800 leading-relaxed">
-                        <div dangerouslySetInnerHTML={{ __html: selectedProduct.content }} />
-                      </div>
-                    </details>
-                  )}
                   <div className="space-y-3.5">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">学校 <span className="text-gray-400 font-normal">（选填）</span></label>
@@ -205,40 +218,62 @@ export default function Home() {
                         className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-shadow" />
                     </div>
 
-                    {/* 课程选择 */}
+                    {/* 课程搜索 */}
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">课程名称 <span className="text-gray-400 font-normal">（选填）</span></label>
-                      <div className="flex gap-2">
-                        <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="输入课程名或点击搜索"
-                          className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-shadow" />
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">课程名称 <span className="text-gray-400 font-normal">（选填）</span></label>
+                          <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="输入或搜索课程"
+                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-shadow" />
+                        </div>
                         <button
-                          onClick={() => { setShowCourseSearch(!showCourseSearch); setCourseFilter(''); }}
-                          className={`shrink-0 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${showCourseSearch ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
-                        >📋 搜索</button>
+                          onClick={searchCourses}
+                          disabled={!account.trim() || !password.trim()}
+                          className="shrink-0 px-4 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-sm font-medium hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >📋 查课</button>
                       </div>
 
-                      {/* 课程建议面板 */}
+                      {/* 课程结果面板 */}
                       {showCourseSearch && (
                         <div className="mt-2 p-3 bg-white border border-gray-200 rounded-xl shadow-sm">
-                          <input type="text" value={courseFilter} onChange={e => setCourseFilter(e.target.value)}
-                            placeholder="过滤课程名..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs mb-2.5 focus:outline-none focus:ring-1 focus:ring-blue-400" />
-                          <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-                            {filteredHints.length > 0 ? filteredHints.map((hint, i) => (
-                              <button key={i}
-                                onClick={() => { setCourse(hint); setShowCourseSearch(false); }}
-                                className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors ${course === hint ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600'}`}
-                              >{hint}</button>
-                            )) : (
-                              <p className="text-xs text-gray-400 py-2">暂无推荐，请手动输入课程名</p>
-                            )}
-                          </div>
-                          {currentBrandHints.length > 0 && (
-                            <p className="text-[10px] text-gray-400 mt-2">以上为该平台常见课程类型，选中后自动填入</p>
+                          {courseLoading ? (
+                            <div className="flex items-center justify-center gap-2 py-4">
+                              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                              <span className="text-xs text-gray-500">正在查询课程列表...</span>
+                            </div>
+                          ) : courseError ? (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-red-500">{courseError}</p>
+                              <button onClick={searchCourses} className="mt-2 text-xs text-blue-500 hover:underline">重试</button>
+                            </div>
+                          ) : courseResults.length > 0 ? (
+                            <div>
+                              <p className="text-xs text-gray-400 mb-2">{courseResults.length} 门课程</p>
+                              <div className="space-y-1 max-h-48 overflow-y-auto">
+                                {courseResults.map((item, i) => {
+                                  const cname = item.kcname || item.name || '';
+                                  const cid = item.kcid || item.id || '';
+                                  const selected = course === cname;
+                                  return (
+                                    <button key={i}
+                                      onClick={() => { setCourse(cname); setShowCourseSearch(false); }}
+                                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selected ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+                                    >{cname}</button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-gray-400">未查询到课程</p>
+                              <p className="text-xs text-gray-400 mt-1">请确认账号密码正确，或手动输入课程名</p>
+                            </div>
                           )}
                         </div>
                       )}
                     </div>
                   </div>
+
                   <button onClick={() => setStep('confirm')} disabled={!canSubmit}
                     className="mt-5 w-full py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors active:scale-[0.98]">下一步</button>
                 </>
@@ -287,7 +322,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* 底部导航 */}
       <nav className="sticky bottom-0 bg-white/90 backdrop-blur border-t border-gray-100">
         <div className="max-w-lg mx-auto flex">
           <button onClick={() => { setActiveBrand(null); setSearch(''); }} className="flex-1 py-3 text-center text-blue-500 text-sm font-medium">🛒 商品</button>
