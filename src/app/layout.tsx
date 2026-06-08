@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "虚拟商品商城",
-  description: "优质虚拟数字商品，安全快捷",
+  title: "TaoHua-",
+  description: "TaoHua- 自助下单平台",
 };
 
 export default function RootLayout({

@@ -50,6 +50,7 @@ export default function Home() {
   const [qrcode, setQrcode] = useState('');
   const [orderAmount, setOrderAmount] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [showTip, setShowTip] = useState(false);
 
   useEffect(() => {
     fetch('/api/products')
@@ -190,7 +191,7 @@ export default function Home() {
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-xl shadow-inner">🍑</div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">桃花代刷</h1>
+              <h1 className="text-xl font-bold text-white tracking-tight">TaoHua-</h1>
               <p className="text-white/70 text-xs">自助下单 · 秒速处理</p>
             </div>
           </div>
@@ -216,7 +217,7 @@ export default function Home() {
           <p className="text-xs text-gray-400 font-medium mb-3 px-1">选择学习平台</p>
           <div className="grid grid-cols-2 gap-3">
             {BRANDS.map(b => (
-              <button key={b.id} onClick={() => { setActiveBrand(b.id); setSelectedCategory(''); }}
+              <button key={b.id} onClick={() => { setActiveBrand(b.id); setSelectedCategory(''); setShowTip(true); }}
                 className="rounded-2xl p-5 text-left transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] bg-white border border-gray-100 hover:border-transparent">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center text-xl mb-3 shadow-sm`}>{b.icon}</div>
                 <p className="text-sm font-bold text-gray-800">{b.name}</p>
@@ -247,6 +248,23 @@ export default function Home() {
             className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">清除搜索</button>
         </div>
       )}
+
+      {/* 提示弹窗 */}
+      {showTip && (
+        <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 animate-in slide-in-from-bottom duration-300">
+          <div className="max-w-sm w-full bg-white rounded-2xl shadow-2xl border border-gray-100 p-5">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl shrink-0">💡</span>
+              <div className="flex-1">
+                <p className="text-sm text-gray-700 leading-relaxed">如有<strong className="text-rose-500">学习强国</strong>、<strong className="text-rose-500">校园跑</strong>、<strong className="text-rose-500">论文服务</strong>等需求，可以点击下方「联系管理员」</p>
+              </div>
+              <button onClick={() => setShowTip(false)} className="shrink-0 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs hover:bg-gray-200 transition-colors">✕</button>
+            </div>
+            <button onClick={() => setShowTip(false)} className="mt-3 w-full py-2 bg-rose-50 text-rose-500 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors">我知道了</button>
+          </div>
+        </div>
+      )}
+
 
       {/* 分类层级筛选 */}
       {activeBrand && !search && (() => {
