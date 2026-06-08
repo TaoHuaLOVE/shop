@@ -74,7 +74,7 @@ export default function Home() {
     }
     if (activeBrand) {
       const list = (brandProducts[activeBrand] || []).filter(searchFilter);
-      const b = BRANDS.find(x => x.id === activeBrand);
+      const b = BRANDS.find(x => x.id === activeBrand)!;
       return [{ brand: b, name: b.name, products: list }];
     }
     return BRANDS.map(b => ({
