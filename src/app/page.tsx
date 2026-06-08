@@ -67,7 +67,7 @@ export default function Home() {
   }, [data]);
 
   const groupedDisplay = useMemo(() => {
-    const searchFilter = (p) => !search || p.name.toLowerCase().includes(search.toLowerCase());
+    const searchFilter = (p: Product) => !search || p.name.toLowerCase().includes(search.toLowerCase());
     if (search) {
       const filtered = (data?.products || []).filter(searchFilter);
       return [{ brand: null, name: "搜索结果", products: filtered }];
