@@ -4,11 +4,11 @@ import { useState, useEffect, useMemo } from 'react';
 import type { ProductsResponse, Product } from '@/lib/types';
 
 const BRANDS = [
-  { id: 'cxxt', name: '超星学习通', kw: '超星学习通', icon: '📎', color: 'from-blue-500 to-blue-600' },
-  { id: 'uxy', name: 'u校园', kw: ['u校园', '-u校园AI'], icon: '🎗', color: 'from-emerald-500 to-teal-600' },
-  { id: 'uxyai', name: 'u校园 AI 版', kw: 'u校园AI', icon: '🎓', color: 'from-violet-500 to-purple-600' },
-  { id: 'mooc', name: '中国大学 MOOC', kw: '中国大学MOOC', icon: '🎒', color: 'from-orange-500 to-red-500' },
-  { id: 'xuetangx', name: '学堂在线', kw: '学堂在线', icon: '🏇', color: 'from-cyan-500 to-blue-600' },
+  { id: 'cxxt', name: '超星学习通', kw: '超星学习通', icon: '📚', color: 'from-blue-500 to-indigo-600', bg: 'bg-blue-50', text: 'text-blue-600' },
+  { id: 'uxy', name: 'u校园', kw: ['u校园', '-u校园AI'], icon: '🏫', color: 'from-emerald-500 to-teal-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+  { id: 'uxyai', name: 'u校园 AI', kw: 'u校园AI', icon: '🤖', color: 'from-violet-500 to-purple-600', bg: 'bg-violet-50', text: 'text-violet-600' },
+  { id: 'mooc', name: '中国大学 MOOC', kw: '中国大学MOOC', icon: '🎓', color: 'from-orange-500 to-red-500', bg: 'bg-orange-50', text: 'text-orange-600' },
+  { id: 'xuetangx', name: '学堂在线', kw: '学堂在线', icon: '💻', color: 'from-cyan-500 to-sky-600', bg: 'bg-cyan-50', text: 'text-cyan-600' },
 ];
 
 interface CourseItem {
@@ -135,16 +135,10 @@ export default function Home() {
         body: JSON.stringify({ cid: selectedProduct.cid, account: account.trim(), password: password.trim(), school: school.trim() }),
       });
       const result = await res.json();
-      if (result.success) {
-        setCourseResults(result.courses || []);
-      } else {
-        setCourseError(result.error || '查询失败');
-      }
-    } catch {
-      setCourseError('网络错误');
-    } finally {
-      setCourseLoading(false);
-    }
+      if (result.success) setCourseResults(result.courses || []);
+      else setCourseError(result.error || '查询失败');
+    } catch { setCourseError('网络错误'); }
+    finally { setCourseLoading(false); }
   };
 
   const openProduct = (p: Product) => {
@@ -154,297 +148,263 @@ export default function Home() {
   };
 
   const currentBrand = BRANDS.find(b => b.id === activeBrand);
+  const stepLabels = ['填写信息', '确认订单', '扫码支付', '完成'];
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-white">
       <div className="text-center">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-gray-500 text-sm">加载商品中...</p>
+        <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center"><span className="text-4xl animate-bounce">🍑</span></div>
+        <p className="text-gray-400 text-sm">加载中...</p>
       </div>
     </div>
   );
 
   if (error && !data) return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-white">
       <div className="text-center">
-        <p className="text-red-500 text-sm mb-3">{error}</p>
-        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-blue-500 text-white text-sm rounded-xl">重试</button>
+        <span className="text-4xl block mb-4">😵</span>
+        <p className="text-gray-500 text-sm mb-4">{error}</p>
+        <button onClick={() => window.location.reload()} className="px-8 py-2.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white text-sm font-medium rounded-full shadow-lg hover:-translate-y-0.5 transition-all">重新加载</button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16">
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-100">
-        <div className="max-w-lg mx-auto px-4 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-lg font-bold text-gray-900">桃花代刷</h1>
-            <span className="text-xs text-gray-400">自助下单 · 自动处理</span>
+    <div className="min-h-screen bg-gradient-to-b from-rose-50/50 via-white to-white pb-20">
+      {/* Header */}
+      <header className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-rose-400 via-pink-500 to-orange-400 opacity-90" />
+        <div className="relative max-w-lg mx-auto px-5 pt-12 pb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-xl shadow-inner">🍑</div>
+            <div>
+              <h1 className="text-xl font-bold text-white tracking-tight">桃花代刷</h1>
+              <p className="text-white/70 text-xs">自助下单 · 秒速处理</p>
+            </div>
           </div>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">🔍</span>
             <input
-              type="text"
-              value={search}
+              type="text" value={search}
               onChange={e => { setSearch(e.target.value); setActiveBrand(null); }}
-              placeholder="搜索商品..."
-              className="w-full pl-9 pr-4 py-2 bg-gray-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-300 transition-all"
+              placeholder="搜索你需要的课程服务..."
+              className="w-full pl-10 pr-10 py-3 bg-white/20 backdrop-blur border border-white/30 rounded-2xl text-sm text-white placeholder-white/50 outline-none focus:bg-white/30 focus:border-white/50 transition-all"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>
+              <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-white/80 text-xs hover:bg-white/50 transition-colors">✕</button>
             )}
           </div>
         </div>
       </header>
 
+      {/* Brand Cards */}
       {!search && (
-        <div className="max-w-lg mx-auto px-4 py-4">
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {BRANDS.map(b => (
-              <button
-                key={b.id}
-                onClick={() => setActiveBrand(activeBrand === b.id ? null : b.id)}
-                className={`shrink-0 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  activeBrand === b.id
-                    ? `bg-gradient-to-r ${b.color} text-white shadow-md`
-                    : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <span className="mr-1.5">{b.icon}</span>{b.name}
-              </button>
-            ))}
+        <div className="max-w-lg mx-auto px-4 -mt-4 relative z-10">
+          <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-3">
+            <p className="text-xs text-gray-400 px-2 mb-2 font-medium">选择平台</p>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <button onClick={() => setActiveBrand(null)}
+                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${!activeBrand ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-md shadow-rose-200 scale-105' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>🔥 全部</button>
+              {BRANDS.map(b => (
+                <button key={b.id} onClick={() => setActiveBrand(activeBrand === b.id ? null : b.id)}
+                  className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${activeBrand === b.id ? `bg-gradient-to-r ${b.color} text-white shadow-md scale-105` : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>{b.icon} {b.name}</button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      <div className="max-w-lg mx-auto px-4 py-2">
+      {/* Product Grid */}
+      <div className="max-w-lg mx-auto px-4 pt-5">
         {activeBrand && currentBrand && (
-          <div className="mb-3 flex items-center gap-2">
-            <span className="text-sm">{currentBrand.icon}</span>
-            <span className="text-sm font-medium text-gray-700">{currentBrand.name}</span>
-            <span className="text-xs text-gray-400">({displayProducts.length} 个商品)</span>
+          <div className="flex items-center gap-2 mb-4">
+            <div className={`w-8 h-8 rounded-xl ${currentBrand.bg} flex items-center justify-center text-lg`}>{currentBrand.icon}</div>
+            <div><p className="text-sm font-semibold text-gray-800">{currentBrand.name}</p><p className="text-xs text-gray-400">{displayProducts.length} 个服务</p></div>
           </div>
         )}
         {displayProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-400 text-sm">暂无商品</p>
+          <div className="text-center py-20">
+            <span className="text-5xl block mb-4">📭</span>
+            <p className="text-gray-400 text-sm">没有找到相关服务</p>
+            <p className="text-gray-300 text-xs mt-1">试试其他关键词或平台</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {displayProducts.map(p => (
-              <button
-                key={p.cid}
-                onClick={() => openProduct(p)}
-                className="bg-white rounded-xl p-4 text-left border border-gray-100 hover:border-blue-200 hover:shadow-md transition-all active:scale-[0.98]"
-              >
-                <div className="text-xs text-gray-400 mb-1 truncate">{p.fenleiname}</div>
-                <div className="text-sm font-medium text-gray-800 mb-2 line-clamp-2 leading-snug">{p.name}</div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-bold text-red-500">¥{p.sellingPrice.toFixed(2)}</span>
-                  {p.price !== p.sellingPrice && (
-                    <span className="text-xs text-gray-400 line-through">¥{p.price.toFixed(2)}</span>
-                  )}
-                </div>
-              </button>
-            ))}
+            {displayProducts.map(p => {
+              const brand = BRANDS.find(b => matchBrand(p.name, b));
+              return (
+                <button key={p.cid} onClick={() => openProduct(p)}
+                  className="group bg-white rounded-2xl p-4 text-left border border-gray-100 hover:border-rose-200 hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.98]">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${brand?.bg || 'bg-gray-100'} ${brand?.text || 'text-gray-500'}`}>{brand?.icon} {brand?.name}</span>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-800 mb-3 line-clamp-2 leading-snug group-hover:text-rose-600 transition-colors">{p.name}</p>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl font-bold text-rose-500">¥{p.sellingPrice.toFixed(2)}</span>
+                    {p.price !== p.sellingPrice && <span className="text-xs text-gray-300 line-through">¥{p.price.toFixed(2)}</span>}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
+      {/* Purchase Modal */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedProduct(null)} />
-          <div className="relative bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between rounded-t-2xl">
-              <div>
-                <h2 className="text-base font-semibold text-gray-900">下单</h2>
-                <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[200px]">{selectedProduct.name}</p>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedProduct(null)} />
+          <div className="relative bg-white w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl max-h-[92vh] overflow-y-auto">
+            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-50 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center text-white text-lg">🍑</div>
+                <div><h2 className="text-base font-bold text-gray-900">创建订单</h2><p className="text-xs text-gray-400 truncate max-w-[180px]">{selectedProduct.name}</p></div>
               </div>
-              <button onClick={() => setSelectedProduct(null)} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">✕</button>
+              <button onClick={() => setSelectedProduct(null)} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition-colors">✕</button>
             </div>
 
-            <div className="px-5 py-5">
-              <div className="flex items-center justify-center gap-2 mb-6">
-                {['form', 'confirm', 'payment', 'result'].map((s, i) => {
-                  const labels = ['填写', '确认', '支付', '完成'];
+            <div className="px-6 py-6">
+              {/* Step Indicator */}
+              <div className="flex items-center mb-8">
+                {stepLabels.map((label, i) => {
                   const idx = ['form', 'confirm', 'payment', 'result'].indexOf(step);
+                  const isActive = idx === i;
+                  const isDone = idx > i;
                   return (
-                    <div key={s} className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-all ${
-                        idx === i ? 'bg-blue-500 text-white' : idx > i ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                      }`}>
-                        {idx > i ? '✓' : i + 1}
+                    <div key={i} className="flex-1 flex items-center">
+                      <div className="flex flex-col items-center flex-1">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${isActive ? 'bg-gradient-to-br from-rose-400 to-pink-500 text-white shadow-lg shadow-rose-200 scale-110' : isDone ? 'bg-green-100 text-green-500' : 'bg-gray-100 text-gray-400'}`}>{isDone ? '✓' : i + 1}</div>
+                        <span className={`text-[10px] mt-1.5 font-medium ${isActive ? 'text-rose-500' : isDone ? 'text-green-500' : 'text-gray-400'}`}>{label}</span>
                       </div>
-                      <span className={`text-xs ${idx === i ? 'text-blue-600 font-medium' : 'text-gray-400'}`}>{labels[i]}</span>
-                      {i < 3 && <div className={`w-4 h-px ${idx > i ? 'bg-green-300' : 'bg-gray-200'}`} />}
+                      {i < 3 && <div className={`h-0.5 flex-1 -mt-4 mx-1 rounded-full transition-all duration-500 ${isDone ? 'bg-green-300' : 'bg-gray-200'}`} />}
                     </div>
                   );
                 })}
               </div>
 
+              {/* Step: Form */}
               {step === 'form' && (
                 <>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">学校</label>
-                      <input type="text" value={school} onChange={e => setSchool(e.target.value)}
-                        placeholder="选填"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all"
-                      />
+                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">🏫 学校 <span className="text-xs text-gray-400 font-normal">选填</span></label>
+                      <input type="text" value={school} onChange={e => setSchool(e.target.value)} placeholder="例如：北京大学" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-50 transition-all" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">账号 <span className="text-red-400">*</span></label>
-                      <input type="text" value={account} onChange={e => setAccount(e.target.value)}
-                        placeholder="请输入账号"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all"
-                      />
+                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">👤 账号 <span className="text-rose-400 text-xs">*必填</span></label>
+                      <input type="text" value={account} onChange={e => setAccount(e.target.value)} placeholder="输入你的学习平台账号" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-50 transition-all" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">密码 <span className="text-red-400">*</span></label>
-                      <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                        placeholder="请输入密码"
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all"
-                      />
+                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">🔒 密码 <span className="text-rose-400 text-xs">*必填</span></label>
+                      <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="输入你的学习平台密码" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-50 transition-all" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">课程</label>
+                      <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-2">📖 课程 <span className="text-xs text-gray-400 font-normal">选填</span></label>
                       <div className="flex gap-2">
-                        <input type="text" value={course} onChange={e => setCourse(e.target.value)}
-                          placeholder="选填，可搜索课程"
-                          className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all"
-                        />
-                        <button
-                          onClick={searchCourses}
-                          disabled={!account.trim() || !password.trim()}
-                          className="shrink-0 px-4 py-2.5 bg-blue-50 text-blue-600 rounded-xl text-sm font-medium hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >查课</button>
+                        <input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="手动输入或点击查课" className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-50 transition-all" />
+                        <button onClick={searchCourses} disabled={!account.trim() || !password.trim()} className="shrink-0 px-5 py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-xl text-sm font-medium hover:from-rose-500 hover:to-pink-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shadow-rose-200 active:scale-95">🔍 查课</button>
                       </div>
-
                       {showCourseSearch && (
-                        <div className="mt-2 p-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+                        <div className="mt-3 p-4 bg-white border border-gray-100 rounded-2xl shadow-lg">
                           {courseLoading ? (
-                            <div className="flex items-center justify-center gap-2 py-4">
-                              <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                              <span className="text-xs text-gray-500">正在查询课程列表...</span>
-                            </div>
+                            <div className="flex items-center justify-center gap-2 py-6"><div className="w-5 h-5 border-2 border-rose-400 border-t-transparent rounded-full animate-spin" /><span className="text-sm text-gray-400">查询中...</span></div>
                           ) : courseError ? (
-                            <div className="text-center py-4">
-                              <p className="text-sm text-red-500">{courseError}</p>
-                              <button onClick={searchCourses} className="mt-2 text-xs text-blue-500 hover:underline">重试</button>
-                            </div>
+                            <div className="text-center py-4"><p className="text-sm text-red-400 mb-2">{courseError}</p><button onClick={searchCourses} className="text-xs text-rose-500 hover:underline font-medium">重新查询</button></div>
                           ) : courseResults.length > 0 ? (
-                            <div>
-                              <p className="text-xs text-gray-400 mb-2">{courseResults.length} 门课程</p>
-                              <div className="space-y-1 max-h-48 overflow-y-auto">
+                            <div><p className="text-xs text-gray-400 mb-2 font-medium">找到 {courseResults.length} 门课程</p>
+                              <div className="space-y-1 max-h-44 overflow-y-auto">
                                 {courseResults.map((item, i) => {
                                   const cname = item.kcname || item.name || '';
-                                  const selected = course === cname;
                                   return (
-                                    <button key={i}
-                                      onClick={() => { setCourse(cname); setShowCourseSearch(false); }}
-                                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selected ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
-                                    >{cname}</button>
+                                    <button key={i} onClick={() => { setCourse(cname); setShowCourseSearch(false); }}
+                                      className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all ${course === cname ? 'bg-rose-50 text-rose-600 font-semibold border border-rose-200' : 'text-gray-600 hover:bg-gray-50 border border-transparent'}`}>{cname}</button>
                                   );
                                 })}
                               </div>
                             </div>
                           ) : (
-                            <div className="text-center py-4">
-                              <p className="text-sm text-gray-400">未查询到课程</p>
-                              <p className="text-xs text-gray-400 mt-1">请确认账号密码正确，或手动输入课程名</p>
-                            </div>
+                            <div className="text-center py-4"><span className="text-3xl block mb-2">📭</span><p className="text-sm text-gray-400">未找到课程</p><p className="text-xs text-gray-300 mt-1">请检查账号密码后重试</p></div>
                           )}
                         </div>
                       )}
                     </div>
                   </div>
-
-                  <button onClick={() => setStep('confirm')} disabled={!canSubmit}
-                    className="mt-5 w-full py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors active:scale-[0.98]">下一步</button>
+                  <button onClick={() => setStep('confirm')} disabled={!canSubmit} className="mt-6 w-full py-3.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold rounded-2xl hover:from-rose-500 hover:to-pink-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-rose-200 active:scale-[0.98] text-base tracking-wide">下一步</button>
                 </>
               )}
+
+              {/* Step: Confirm */}
               {step === 'confirm' && (
                 <>
-                  <div className="text-center mb-5">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-50 flex items-center justify-center"><span className="text-blue-500 text-xl">💸</span></div>
-                    <h3 className="text-lg font-semibold text-gray-900">确认订单</h3>
-                    <p className="text-sm text-gray-500 mt-1">请核对以下信息</p>
+                  <div className="text-center mb-6">
+                    <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center"><span className="text-2xl">📋</span></div>
+                    <h3 className="text-lg font-bold text-gray-900">确认订单信息</h3>
+                    <p className="text-sm text-gray-400 mt-1">请仔细核对以下内容</p>
                   </div>
-                  <div className="bg-gray-50 rounded-xl p-4 space-y-3 mb-4">
-                    <div className="flex justify-between text-sm"><span className="text-gray-500">商品</span><span className="text-gray-800 text-right max-w-[60%] truncate">{selectedProduct.name}</span></div>
-                    {school && <div className="flex justify-between text-sm"><span className="text-gray-500">学校</span><span className="text-gray-800">{school}</span></div>}
-                    <div className="flex justify-between text-sm"><span className="text-gray-500">账号</span><span className="text-gray-800">{account}</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-gray-500">密码</span><span className="text-gray-800">{'*'.repeat(Math.min(password.length, 12))}</span></div>
-                    {course && <div className="flex justify-between text-sm"><span className="text-gray-500">课程</span><span className="text-gray-800 text-right max-w-[60%] truncate">{course}</span></div>}
-                    <hr className="border-gray-200" />
-                    <div className="flex justify-between items-baseline"><span className="text-sm text-gray-500">应付金额</span><span className="text-xl font-bold text-red-500">¥{selectedProduct.sellingPrice.toFixed(2)}</span></div>
+                  <div className="bg-gray-50 rounded-2xl p-5 space-y-3.5 mb-5">
+                    <div className="flex justify-between items-center text-sm"><span className="text-gray-400">服务项目</span><span className="text-gray-800 font-medium text-right max-w-[55%] truncate">{selectedProduct.name}</span></div>
+                    {school && <div className="flex justify-between items-center text-sm"><span className="text-gray-400">学校</span><span className="text-gray-700">{school}</span></div>}
+                    <div className="flex justify-between items-center text-sm"><span className="text-gray-400">账号</span><span className="text-gray-700 font-medium">{account}</span></div>
+                    <div className="flex justify-between items-center text-sm"><span className="text-gray-400">密码</span><span className="text-gray-700">{'*'.repeat(Math.min(password.length, 12))}</span></div>
+                    {course && <div className="flex justify-between items-center text-sm"><span className="text-gray-400">课程</span><span className="text-gray-700 text-right max-w-[55%] truncate">{course}</span></div>}
+                    <div className="border-t border-gray-200 pt-3.5 flex justify-between items-center"><span className="text-sm text-gray-500">合计应付</span><span className="text-2xl font-bold text-rose-500">¥{selectedProduct.sellingPrice.toFixed(2)}</span></div>
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => setStep('form')} className="flex-1 py-3 bg-gray-100 text-gray-600 font-medium rounded-xl hover:bg-gray-200 transition-colors text-sm">返回修改</button>
-                    <button onClick={createOrder} disabled={submitting}
-                      className="flex-[2] py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
-                      {submitting ? <span className="flex items-center justify-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />处理中...</span> : <>前往支付 · ¥{selectedProduct.sellingPrice.toFixed(2)}</>}
+                    <button onClick={() => setStep('form')} className="flex-1 py-3.5 bg-gray-100 text-gray-600 font-medium rounded-2xl hover:bg-gray-200 transition-colors text-sm">返回修改</button>
+                    <button onClick={createOrder} disabled={submitting} className="flex-[2] py-3.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold rounded-2xl hover:from-rose-500 hover:to-pink-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-rose-200 active:scale-[0.98]">
+                      {submitting ? <span className="flex items-center justify-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />创建中...</span> : <span>前往支付 · ¥{selectedProduct.sellingPrice.toFixed(2)}</span>}
                     </button>
                   </div>
                 </>
               )}
+
+              {/* Step: Payment */}
               {step === 'payment' && (
                 <>
-                  <div className="text-center mb-5">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-green-50 flex items-center justify-center"><span className="text-green-500 text-xl">📱</span></div>
-                    <h3 className="text-lg font-semibold text-gray-900">扫码支付</h3>
-                    <p className="text-sm text-gray-500 mt-1">请使用支付宝/微信扫描二维码完成付款</p>
+                  <div className="text-center mb-6">
+                    <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center"><span className="text-2xl">📱</span></div>
+                    <h3 className="text-lg font-bold text-gray-900">支付宝扫码支付</h3>
+                    <p className="text-sm text-gray-400 mt-1">扫码完成付款后点击下方按钮</p>
                   </div>
-
-                  <div className="bg-gray-50 rounded-xl p-6 mb-4 flex flex-col items-center">
+                  <div className="bg-gradient-to-b from-gray-50 to-white rounded-2xl p-6 mb-4 flex flex-col items-center border border-gray-100">
                     {qrcode ? (
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrcode)}`}
-                        alt="支付二维码"
-                        className="w-48 h-48 rounded-xl mb-3"
-                      />
-                    ) : (
-                      <div className="w-48 h-48 bg-white border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center mb-3">
-                        <div className="text-center">
-                          <span className="text-4xl block mb-2">📱</span>
-                          <p className="text-xs text-gray-400">加载中...</p>
-                        </div>
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-br from-rose-400/10 to-pink-400/10 rounded-2xl blur-xl" />
+                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(qrcode)}&margin=10`} alt="支付二维码" className="relative w-52 h-52 rounded-2xl shadow-lg mb-4 bg-white p-2" />
                       </div>
+                    ) : (
+                      <div className="w-52 h-52 bg-white border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center mb-4"><div className="text-center"><div className="w-10 h-10 border-2 border-rose-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" /><p className="text-xs text-gray-400">正在生成...</p></div></div>
                     )}
-                    <p className="text-xs text-gray-400 mb-1">应付金额</p>
-                    <p className="text-2xl font-bold text-red-500">¥{orderAmount.toFixed(2)}</p>
+                    <div className="text-center"><p className="text-xs text-gray-400 mb-0.5">应付金额</p><p className="text-3xl font-bold text-rose-500">¥{orderAmount.toFixed(2)}</p></div>
                   </div>
-
-                  <div className="bg-blue-50 rounded-xl p-3 mb-4">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">订单号</span>
-                      <span className="text-gray-700 font-mono">{tradeNo}</span>
-                    </div>
+                  <div className="bg-rose-50 rounded-2xl p-4 mb-5 border border-rose-100">
+                    <div className="flex items-center justify-between text-sm"><span className="text-gray-500">订单编号</span><span className="text-gray-700 font-mono text-xs">{tradeNo}</span></div>
+                    <div className="flex items-center justify-between text-sm mt-1.5"><span className="text-gray-500">支付方式</span><span className="text-blue-500 font-medium">支付宝</span></div>
                   </div>
-
                   <div className="space-y-3">
-                    <button onClick={confirmOrder} disabled={submitting}
-                      className="w-full py-3 bg-green-500 text-white font-medium rounded-xl hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors active:scale-[0.98]">
-                      {submitting ? <span className="flex items-center justify-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />提交中...</span> : '我已付款，提交订单'}
+                    <button onClick={confirmOrder} disabled={submitting} className="w-full py-3.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white font-semibold rounded-2xl hover:from-green-500 hover:to-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-green-200 active:scale-[0.98]">
+                      {submitting ? <span className="flex items-center justify-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />提交中...</span> : '✅ 我已付款，提交订单'}
                     </button>
-                    <button onClick={() => setStep('confirm')} disabled={submitting}
-                      className="w-full py-3 bg-gray-100 text-gray-600 font-medium rounded-xl hover:bg-gray-200 transition-colors text-sm disabled:opacity-50">
-                      返回上一步
-                    </button>
+                    <button onClick={() => setStep('confirm')} disabled={submitting} className="w-full py-3.5 bg-gray-100 text-gray-500 font-medium rounded-2xl hover:bg-gray-200 transition-colors text-sm disabled:opacity-50">返回上一步</button>
                   </div>
                 </>
               )}
+
+              {/* Step: Result */}
               {step === 'result' && orderResult && (
-                <div className="text-center py-4">
-                  <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${orderResult.success ? 'bg-green-50' : 'bg-red-50'}`}>
-                    <span className={`text-3xl ${orderResult.success ? 'text-green-500' : 'text-red-500'}`}>{orderResult.success ? '✓' : '✗'}</span>
+                <div className="text-center py-6">
+                  <div className="relative mx-auto w-20 h-20 mb-5">
+                    <div className={`absolute inset-0 rounded-full blur-xl ${orderResult.success ? 'bg-green-200' : 'bg-red-200'}`} />
+                    <div className={`relative w-20 h-20 rounded-full flex items-center justify-center ${orderResult.success ? 'bg-gradient-to-br from-green-400 to-emerald-500' : 'bg-gradient-to-br from-red-400 to-rose-500'}`}>
+                      <span className="text-white text-3xl">{orderResult.success ? '✓' : '✗'}</span>
+                    </div>
                   </div>
-                  <h3 className={`text-lg font-semibold ${orderResult.success ? 'text-green-600' : 'text-red-500'}`}>{orderResult.success ? '下单成功' : '下单失败'}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{orderResult.message}</p>
-                  {orderResult.orderId && <p className="text-xs text-gray-400 mt-2">订单号：{orderResult.orderId}</p>}
-                  <div className="mt-6 space-y-2">
-                    {orderResult.success && <button onClick={() => setSelectedProduct(null)} className="w-full py-3 bg-blue-500 text-white font-medium rounded-xl hover:bg-blue-600 transition-colors">完成</button>}
-                    <button onClick={() => { setStep('form'); setOrderResult(null); }} className="w-full py-3 bg-gray-100 text-gray-600 font-medium rounded-xl hover:bg-gray-200 transition-colors text-sm">再来一单</button>
+                  <h3 className={`text-xl font-bold mb-1 ${orderResult.success ? 'text-green-600' : 'text-red-500'}`}>{orderResult.success ? '下单成功！' : '下单失败'}</h3>
+                  <p className="text-sm text-gray-500">{orderResult.message}</p>
+                  {orderResult.orderId && <div className="mt-3 inline-block bg-gray-50 rounded-xl px-4 py-2"><p className="text-xs text-gray-400">上游订单号</p><p className="text-sm font-mono text-gray-600">{orderResult.orderId}</p></div>}
+                  <div className="mt-8 space-y-2.5">
+                    {orderResult.success && <button onClick={() => setSelectedProduct(null)} className="w-full py-3.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold rounded-2xl hover:from-rose-500 hover:to-pink-600 transition-all shadow-lg shadow-rose-200 active:scale-[0.98]">完成</button>}
+                    <button onClick={() => { setStep('form'); setOrderResult(null); }} className="w-full py-3.5 bg-gray-100 text-gray-600 font-medium rounded-2xl hover:bg-gray-200 transition-colors text-sm">🔄 再来一单</button>
                   </div>
                 </div>
               )}
@@ -453,10 +413,13 @@ export default function Home() {
         </div>
       )}
 
-      <nav className="sticky bottom-0 bg-white/90 backdrop-blur border-t border-gray-100">
-        <div className="max-w-lg mx-auto flex">
-          <button onClick={() => { setActiveBrand(null); setSearch(''); }} className="flex-1 py-3 text-center text-blue-500 text-sm font-medium">商品</button>
-          <button onClick={() => window.open('https://xn--ur0ap3x.help/#/query', '_blank')} className="flex-1 py-3 text-center text-gray-400 text-sm font-medium hover:text-gray-600 transition-colors">查单</button>
+      {/* Bottom Nav */}
+      <nav className="fixed bottom-0 inset-x-0 z-40">
+        <div className="max-w-lg mx-auto bg-white/80 backdrop-blur-xl border-t border-gray-100 shadow-lg shadow-gray-200/20">
+          <div className="flex">
+            <button onClick={() => { setActiveBrand(null); setSearch(''); }} className="flex-1 py-3.5 flex items-center justify-center gap-1.5 text-rose-500 text-sm font-semibold"><span className="text-lg">🏠</span> 首页</button>
+            <button onClick={() => window.open('https://xn--ur0ap3x.help/#/query', '_blank')} className="flex-1 py-3.5 flex items-center justify-center gap-1.5 text-gray-400 text-sm font-medium hover:text-gray-600 transition-colors"><span className="text-lg">📋</span> 查单</button>
+          </div>
         </div>
       </nav>
     </div>
