@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import type { ProductsResponse, Product } from '@/lib/types';
@@ -66,10 +66,23 @@ export default function Home() {
     return map;
   }, [data]);
 
-  const displayProducts = useMemo(() => {
-    let list = activeBrand ? (brandProducts[activeBrand] || []) : (data?.products || []);
-    if (search) list = list.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
-    return list;
+  // 分组展示：按品牌分组，搜索时打平
+  const groupedDisplay = useMemo(() => {
+    const searchFilter = (p: Product) => !search || p.name.toLowerCase().includes(search.toLowerCase());
+    if (search) {
+      const filtered = (data?.products || []).filter(searchFilter);
+      return [{ brand: null, name: '搜索结果', products: filtered }];
+    }
+    if (activeBrand) {
+      const list = (brandProducts[activeBrand] || []).filter(searchFilter);
+      const b = BRANDS.find(x => x.id === activeBrand)!;
+      return [{ brand: b, name: b.name, products: list }];
+    }
+    return BRANDS.map(b => ({
+      brand: b,
+      name: b.name,
+      products: (brandProducts[b.id] || []).filter(searchFilter),
+    })).filter(g => g.products.length > 0);
   }, [brandProducts, activeBrand, search, data]);
 
   const buildOrderInput = () => [school.trim(), account.trim(), password.trim(), course.trim()].filter(Boolean).join(' ');
@@ -147,7 +160,6 @@ export default function Home() {
     setStep('form'); setOrderResult(null); setTradeNo(''); setQrcode(''); setOrderAmount(0);
   };
 
-  const currentBrand = BRANDS.find(b => b.id === activeBrand);
   const stepLabels = ['填写信息', '确认订单', '扫码支付', '完成'];
 
   if (loading) return (
@@ -214,39 +226,37 @@ export default function Home() {
         </div>
       )}
 
-      {/* Product Grid */}
+      {/* Product Sections — 按品牌分组 */}
       <div className="max-w-lg mx-auto px-4 pt-5">
-        {activeBrand && currentBrand && (
-          <div className="flex items-center gap-2 mb-4">
-            <div className={`w-8 h-8 rounded-xl ${currentBrand.bg} flex items-center justify-center text-lg`}>{currentBrand.icon}</div>
-            <div><p className="text-sm font-semibold text-gray-800">{currentBrand.name}</p><p className="text-xs text-gray-400">{displayProducts.length} 个服务</p></div>
-          </div>
-        )}
-        {displayProducts.length === 0 ? (
+        {groupedDisplay.length === 0 ? (
           <div className="text-center py-20">
             <span className="text-5xl block mb-4">📭</span>
             <p className="text-gray-400 text-sm">没有找到相关服务</p>
             <p className="text-gray-300 text-xs mt-1">试试其他关键词或平台</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {displayProducts.map(p => {
-              const brand = BRANDS.find(b => matchBrand(p.name, b));
-              return (
-                <button key={p.cid} onClick={() => openProduct(p)}
-                  className="group bg-white rounded-2xl p-4 text-left border border-gray-100 hover:border-rose-200 hover:shadow-xl hover:shadow-gray-200/50 hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.98]">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${brand?.bg || 'bg-gray-100'} ${brand?.text || 'text-gray-500'}`}>{brand?.icon} {brand?.name}</span>
-                  </div>
-                  <p className="text-sm font-semibold text-gray-800 mb-3 line-clamp-2 leading-snug group-hover:text-rose-600 transition-colors">{p.name}</p>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl font-bold text-rose-500">¥{p.sellingPrice.toFixed(2)}</span>
-                    {p.price !== p.sellingPrice && <span className="text-xs text-gray-300 line-through">¥{p.price.toFixed(2)}</span>}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          groupedDisplay.map((group, gi) => (
+            <div key={gi} className="mb-5">
+              {/* 分组标题 */}
+              <div className="flex items-center gap-2 mb-3 px-1">
+                {group.brand && (
+                  <div className={`w-7 h-7 rounded-lg ${group.brand.bg} flex items-center justify-center text-sm`}>{group.brand.icon}</div>
+                )}
+                <h2 className={`text-sm font-bold ${group.brand ? 'text-gray-800' : 'text-gray-500'}`}>{group.name}</h2>
+                <span className="text-xs text-gray-400">{group.products.length} 个</span>
+              </div>
+              {/* 商品卡片 */}
+              <div className="grid grid-cols-2 gap-3">
+                {group.products.map(p => (
+                  <button key={p.cid} onClick={() => openProduct(p)}
+                    className="group bg-white rounded-2xl p-4 text-left border border-gray-100 hover:border-rose-200 hover:shadow-lg hover:shadow-gray-200/50 hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.98]">
+                    <p className="text-[13px] font-semibold text-gray-800 mb-3 line-clamp-2 leading-snug group-hover:text-rose-600 transition-colors">{p.name}</p>
+                    <span className="text-lg font-bold text-rose-500">¥{p.sellingPrice.toFixed(2)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))
         )}
       </div>
 
