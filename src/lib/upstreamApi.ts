@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 上游 API 通用请求封装
  */
 
@@ -46,5 +46,50 @@ export async function upstreamApi<T = unknown>(params: UpstreamParams): Promise<
   } catch {
     console.error("[upstreamApi] JSON parse failed for:", text.substring(0, 200));
     return text as unknown as T;
+  }
+}
+
+/**
+ * 推送到上游下单
+ * 调用上游 ?act=add，返回 { success, message, orderId }
+ */
+export async function pushUpstream(cid: number, input: string): Promise<{
+  success: boolean;
+  message: string;
+  orderId?: string;
+  rawText: string;
+}> {
+  try {
+    const body = new URLSearchParams({
+      uid: UID,
+      key: KEY,
+      cid: String(cid),
+      input: input,
+    });
+    const res = await fetch(UPSTREAM_URL + "?act=add", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    });
+    const text = await res.text();
+    console.log("[upstream add]", text);
+
+    let upstream: { msg: string; code: string | number; data?: { orderid?: string } };
+    try {
+      upstream = JSON.parse(text);
+    } catch {
+      upstream = { msg: "上游异常", code: -1 };
+    }
+
+    const ok = upstream.code === "1" || upstream.code === 1;
+    return {
+      success: ok,
+      message: upstream.msg || (ok ? "下单成功" : "下单失败"),
+      orderId: upstream.data?.orderid,
+      rawText: text,
+    };
+  } catch (e) {
+    console.error("[pushUpstream] error:", e);
+    return { success: false, message: "上游请求失败", rawText: "" };
   }
 }
