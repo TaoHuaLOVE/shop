@@ -49,6 +49,7 @@ export default function Home() {
   const [tradeNo, setTradeNo] = useState('');
   const [qrcode, setQrcode] = useState('');
   const [orderAmount, setOrderAmount] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState('');
 
   useEffect(() => {
     fetch('/api/products')
@@ -73,7 +74,8 @@ export default function Home() {
       return [{ brand: null, name: "搜索结果", products: filtered }];
     }
     if (activeBrand) {
-      const list = (brandProducts[activeBrand] || []).filter(searchFilter);
+      let list = (brandProducts[activeBrand] || []).filter(searchFilter);
+      if (selectedCategory) list = list.filter(p => p.fenleiname === selectedCategory);
       const b = BRANDS.find(x => x.id === activeBrand)!;
       return [{ brand: b, name: b.name, products: list }];
     }
@@ -81,7 +83,7 @@ export default function Home() {
       brand: b, name: b.name,
       products: (brandProducts[b.id] || []).filter(searchFilter),
     })).filter(g => g.products.length > 0);
-  }, [brandProducts, activeBrand, search, data]);
+  }, [brandProducts, activeBrand, search, data, selectedCategory]);
 
   const buildOrderInput = () => [school.trim(), account.trim(), password.trim(), course.trim()].filter(Boolean).join(' ');
   const canSubmit = account.trim() && password.trim();
@@ -214,11 +216,10 @@ export default function Home() {
           <p className="text-xs text-gray-400 font-medium mb-3 px-1">选择学习平台</p>
           <div className="grid grid-cols-2 gap-3">
             {BRANDS.map(b => (
-              <button key={b.id} onClick={() => setActiveBrand(b.id)}
+              <button key={b.id} onClick={() => { setActiveBrand(b.id); setSelectedCategory(''); }}
                 className="rounded-2xl p-5 text-left transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] bg-white border border-gray-100 hover:border-transparent">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center text-xl mb-3 shadow-sm`}>{b.icon}</div>
                 <p className="text-sm font-bold text-gray-800">{b.name}</p>
-                <p className="text-xs text-gray-400 mt-1">3-7 起</p>
               </button>
             ))}
           </div>
@@ -246,6 +247,27 @@ export default function Home() {
             className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">清除搜索</button>
         </div>
       )}
+
+      {/* 分类层级筛选 */}
+      {activeBrand && !search && (() => {
+        const cats = [...new Set((brandProducts[activeBrand] || []).map(p => p.fenleiname))].filter(Boolean);
+        return cats.length > 1 ? (
+          <div className="max-w-lg mx-auto px-4 pt-3">
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <button onClick={() => setSelectedCategory('')}
+                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  !selectedCategory ? 'bg-rose-100 text-rose-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}>全部</button>
+              {cats.map(cat => (
+                <button key={cat} onClick={() => setSelectedCategory(cat)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                    selectedCategory === cat ? 'bg-rose-100 text-rose-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}>{cat}</button>
+              ))}
+            </div>
+          </div>
+        ) : null;
+      })()}
 
       {/* 商品列表 */}
       {(activeBrand || search) && (
