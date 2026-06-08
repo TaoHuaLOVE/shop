@@ -1,14 +1,14 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import type { ProductsResponse, Product } from '@/lib/types';
 
 const BRANDS = [
-  { id: 'cxxt', name: '鐡掑懏妲︾€涳缚绡勯柅?, kw: '鐡掑懏妲︾€涳缚绡勯柅?, icon: '棣冩憥', color: 'from-blue-500 to-indigo-600', bg: 'bg-blue-50', text: 'text-blue-600' },
-  { id: 'uxy', name: 'u閺嶁€虫疮', kw: ['u閺嶁€虫疮', '-u閺嶁€虫疮AI'], icon: '棣冨建', color: 'from-emerald-500 to-teal-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-  { id: 'uxyai', name: 'u閺嶁€虫疮 AI', kw: 'u閺嶁€虫疮AI', icon: '棣冾樆', color: 'from-violet-500 to-purple-600', bg: 'bg-violet-50', text: 'text-violet-600' },
-  { id: 'mooc', name: '娑擃厼娴楁径褍顒?MOOC', kw: '娑擃厼娴楁径褍顒烳OOC', icon: '棣冨笚', color: 'from-orange-500 to-red-500', bg: 'bg-orange-50', text: 'text-orange-600' },
-  { id: 'xuetangx', name: '鐎涳箑鐖為崷銊у殠', kw: '鐎涳箑鐖為崷銊у殠', icon: '棣冩崌', color: 'from-cyan-500 to-sky-600', bg: 'bg-cyan-50', text: 'text-cyan-600' },
+  { id: 'cxxt', name: '超星学习通', kw: '超星学习通', icon: '📚', color: 'from-blue-500 to-indigo-600', bg: 'bg-blue-50', text: 'text-blue-600' },
+  { id: 'uxy', name: 'u校园', kw: ['u校园', '-u校园AI'], icon: '🏫', color: 'from-emerald-500 to-teal-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+  { id: 'uxyai', name: 'u校园 AI', kw: 'u校园AI', icon: '🤖', color: 'from-violet-500 to-purple-600', bg: 'bg-violet-50', text: 'text-violet-600' },
+  { id: 'mooc', name: '中国大学 MOOC', kw: '中国大学MOOC', icon: '🎓', color: 'from-orange-500 to-red-500', bg: 'bg-orange-50', text: 'text-orange-600' },
+  { id: 'xuetangx', name: '学堂在线', kw: '学堂在线', icon: '💻', color: 'from-cyan-500 to-sky-600', bg: 'bg-cyan-50', text: 'text-cyan-600' },
 ];
 
 interface CourseItem {
@@ -53,8 +53,8 @@ export default function Home() {
   useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
-      .then((d: ProductsResponse) => { if (d.success) setData(d); else setError('閼惧嘲褰囬崯鍡楁惂婢惰精瑙?); })
-      .catch(() => setError('缂冩垹绮堕柨娆掝嚖'))
+      .then((d: ProductsResponse) => { if (d.success) setData(d); else setError('获取商品失败'); })
+      .catch(() => setError('网络错误'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -66,21 +66,19 @@ export default function Home() {
     return map;
   }, [data]);
 
-  // 閸掑棛绮嶇仦鏇犮仛閿涙碍瀵滈崫浣哄閸掑棛绮嶉敍灞炬偝缁便垺妞傞幍鎾抽挬
   const groupedDisplay = useMemo(() => {
-    const searchFilter = (p: Product) => !search || p.name.toLowerCase().includes(search.toLowerCase());
+    const searchFilter = (p) => !search || p.name.toLowerCase().includes(search.toLowerCase());
     if (search) {
       const filtered = (data?.products || []).filter(searchFilter);
-      return [{ brand: null, name: '閹兼粎鍌ㄧ紒鎾寸亯', products: filtered }];
+      return [{ brand: null, name: "搜索结果", products: filtered }];
     }
     if (activeBrand) {
       const list = (brandProducts[activeBrand] || []).filter(searchFilter);
-      const b = BRANDS.find(x => x.id === activeBrand)!;
+      const b = BRANDS.find(x => x.id === activeBrand);
       return [{ brand: b, name: b.name, products: list }];
     }
     return BRANDS.map(b => ({
-      brand: b,
-      name: b.name,
+      brand: b, name: b.name,
       products: (brandProducts[b.id] || []).filter(searchFilter),
     })).filter(g => g.products.length > 0);
   }, [brandProducts, activeBrand, search, data]);
@@ -106,11 +104,11 @@ export default function Home() {
         setOrderAmount(selectedProduct.sellingPrice);
         setStep('payment');
       } else {
-        setOrderResult({ success: false, message: result.error || '閸掓稑缂撶拋銏犲礋婢惰精瑙? });
+        setOrderResult({ success: false, message: result.error || '创建订单失败' });
         setStep('result');
       }
     } catch {
-      setOrderResult({ success: false, message: '缂冩垹绮堕柨娆掝嚖' });
+      setOrderResult({ success: false, message: '网络错误' });
       setStep('result');
     } finally {
       setSubmitting(false);
@@ -128,7 +126,7 @@ export default function Home() {
       });
       setOrderResult(await res.json());
     } catch {
-      setOrderResult({ success: false, message: '缂冩垹绮堕柨娆掝嚖' });
+      setOrderResult({ success: false, message: '网络错误' });
     } finally {
       setSubmitting(false);
       setStep('result');
@@ -149,8 +147,8 @@ export default function Home() {
       });
       const result = await res.json();
       if (result.success) setCourseResults(result.courses || []);
-      else setCourseError(result.error || '閺屻儴顕楁径杈Е');
-    } catch { setCourseError('缂冩垹绮堕柨娆掝嚖'); }
+      else setCourseError(result.error || '查询失败');
+    } catch { setCourseError('网络错误'); }
     finally { setCourseLoading(false); }
   };
 
@@ -160,13 +158,13 @@ export default function Home() {
     setStep('form'); setOrderResult(null); setTradeNo(''); setQrcode(''); setOrderAmount(0);
   };
 
-  const stepLabels = ['婵夘偄鍟撴穱鈩冧紖', '绾喛顓荤拋銏犲礋', '閹殿偆鐖滈弨顖欑帛', '鐎瑰本鍨?];
+  const stepLabels = ['填写信息', '确认订单', '扫码支付', '完成'];
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-white">
       <div className="text-center">
-        <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center"><span className="text-4xl animate-bounce">棣冨礄</span></div>
-        <p className="text-gray-400 text-sm">閸旂姾娴囨稉?..</p>
+        <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center"><span className="text-4xl animate-bounce">🍑</span></div>
+        <p className="text-gray-400 text-sm">加载中...</p>
       </div>
     </div>
   );
@@ -174,9 +172,9 @@ export default function Home() {
   if (error && !data) return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-white">
       <div className="text-center">
-        <span className="text-4xl block mb-4">棣冩█</span>
+        <span className="text-4xl block mb-4">😵</span>
         <p className="text-gray-500 text-sm mb-4">{error}</p>
-        <button onClick={() => window.location.reload()} className="px-8 py-2.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white text-sm font-medium rounded-full shadow-lg hover:-translate-y-0.5 transition-all">闁插秵鏌婇崝鐘烘祰</button>
+        <button onClick={() => window.location.reload()} className="px-8 py-2.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white text-sm font-medium rounded-full shadow-lg hover:-translate-y-0.5 transition-all">重新加载</button>
       </div>
     </div>
   );
@@ -188,29 +186,29 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-rose-400 via-pink-500 to-orange-400 opacity-90" />
         <div className="relative max-w-lg mx-auto px-5 pt-12 pb-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-xl shadow-inner">棣冨礄</div>
+            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-xl shadow-inner">🍑</div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">濡楀啳濮虫禒锝呭煕</h1>
-              <p className="text-white/70 text-xs">閼奉亜濮稉瀣礋 璺?缁夋帡鈧喎顦╅悶?/p>
+              <h1 className="text-xl font-bold text-white tracking-tight">桃花代刷</h1>
+              <p className="text-white/70 text-xs">自助下单 · 秒速处理</p>
             </div>
           </div>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">棣冩敵</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">🔍</span>
             <input
               type="text" value={search}
               onChange={e => { setSearch(e.target.value); setActiveBrand(null); }}
-              placeholder="閹兼粎鍌ㄦ担鐘绘付鐟曚胶娈戠拠鍓р柤閺堝秴濮?.."
+              placeholder="搜索你需要的课程服务..."
               className="w-full pl-10 pr-10 py-3 bg-white/20 backdrop-blur border border-white/30 rounded-2xl text-sm text-white placeholder-white/50 outline-none focus:bg-white/30 focus:border-white/50 transition-all"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-white/80 text-xs hover:bg-white/50 transition-colors">閴?/button>
+              <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-white/80 text-xs hover:bg-white/50 transition-colors">✕</button>
             )}
           </div>
         </div>
       </header>
 
-      
-      {/* 品牌入口 — 首页主体 */}
+
+      {/* 品牌入口 */}
       {!activeBrand && !search && (
         <div className="max-w-lg mx-auto px-4 pt-6">
           <p className="text-xs text-gray-400 font-medium mb-3 px-1">选择学习平台</p>
@@ -220,43 +218,42 @@ export default function Home() {
                 className="rounded-2xl p-5 text-left transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] bg-white border border-gray-100 hover:border-transparent">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center text-xl mb-3 shadow-sm`}>{b.icon}</div>
                 <p className="text-sm font-bold text-gray-800">{b.name}</p>
-                <p className="text-xs text-gray-400 mt-1">¥3-7 起</p>
+                <p className="text-xs text-gray-400 mt-1">3-7 起</p>
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* 选中品牌后的标签栏 */}
+      {/* 选中品牌后 */}
       {activeBrand && !search && (
         <div className="max-w-lg mx-auto px-4 pt-4">
           <div className="flex items-center gap-2 flex-wrap">
             <button onClick={() => setActiveBrand(null)}
-              className="shrink-0 px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">← 返回首页</button>
+              className="shrink-0 px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">返回首页</button>
             {BRANDS.map(b => (
               <button key={b.id} onClick={() => setActiveBrand(b.id)}
-                className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeBrand === b.id ? `bg-gradient-to-r ${b.color} text-white shadow-md` : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>{b.icon} {b.name}</button>
+                className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeBrand === b.id ? `bg-gradient-to-r ${b.color} text-white shadow-md` : "bg-gray-50 text-gray-500 hover:bg-gray-100"}`}>{b.icon} {b.name}</button>
             ))}
           </div>
         </div>
       )}
 
-      {/* 搜索时显示的标签 */}
+      {/* 搜索标签 */}
       {search && (
         <div className="max-w-lg mx-auto px-4 pt-4">
           <button onClick={() => setSearch('')}
-            className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">← 清除搜索</button>
+            className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">清除搜索</button>
         </div>
       )}
 
-      {/* 商品列表 — 选中品牌或搜索后显示 */}
+      {/* 商品列表 */}
       {(activeBrand || search) && (
         <div className="max-w-lg mx-auto px-4 pt-4">
           {groupedDisplay.length === 0 ? (
             <div className="text-center py-20">
-              <span className="text-5xl block mb-4">📭</span>
+              <span className="text-5xl block mb-4">NoData</span>
               <p className="text-gray-400 text-sm">没有找到相关服务</p>
-              <p className="text-gray-300 text-xs mt-1">试试其他关键词或平台</p>
             </div>
           ) : (
             groupedDisplay.map((group, gi) => (
@@ -265,7 +262,7 @@ export default function Home() {
                   {group.brand && (
                     <div className={`w-7 h-7 rounded-lg ${group.brand.bg} flex items-center justify-center text-sm`}>{group.brand.icon}</div>
                   )}
-                  <h2 className={`text-sm font-bold ${group.brand ? 'text-gray-800' : 'text-gray-500'}`}>{group.name}</h2>
+                  <h2 className={`text-sm font-bold ${group.brand ? "text-gray-800" : "text-gray-500"}`}>{group.name}</h2>
                   <span className="text-xs text-gray-400">{group.products.length} 个</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -282,7 +279,7 @@ export default function Home() {
           )}
         </div>
       )}
-Purchase Modal */}
+      {/* Purchase Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedProduct(null)} />
@@ -457,4 +454,3 @@ Purchase Modal */}
     </div>
   );
 }
-
