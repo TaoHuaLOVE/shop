@@ -49,8 +49,6 @@ export default function Home() {
   const [tradeNo, setTradeNo] = useState('');
   const [qrcode, setQrcode] = useState('');
   const [orderAmount, setOrderAmount] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [showTip, setShowTip] = useState(false);
 
   useEffect(() => {
     fetch('/api/products')
@@ -68,23 +66,24 @@ export default function Home() {
     return map;
   }, [data]);
 
+  // 分组展示：按品牌分组，搜索时打平
   const groupedDisplay = useMemo(() => {
     const searchFilter = (p: Product) => !search || p.name.toLowerCase().includes(search.toLowerCase());
     if (search) {
       const filtered = (data?.products || []).filter(searchFilter);
-      return [{ brand: null, name: "搜索结果", products: filtered }];
+      return [{ brand: null, name: '搜索结果', products: filtered }];
     }
     if (activeBrand) {
-      let list = (brandProducts[activeBrand] || []).filter(searchFilter);
-      if (selectedCategory) list = list.filter(p => p.fenleiname === selectedCategory);
+      const list = (brandProducts[activeBrand] || []).filter(searchFilter);
       const b = BRANDS.find(x => x.id === activeBrand)!;
       return [{ brand: b, name: b.name, products: list }];
     }
     return BRANDS.map(b => ({
-      brand: b, name: b.name,
+      brand: b,
+      name: b.name,
       products: (brandProducts[b.id] || []).filter(searchFilter),
     })).filter(g => g.products.length > 0);
-  }, [brandProducts, activeBrand, search, data, selectedCategory]);
+  }, [brandProducts, activeBrand, search, data]);
 
   const buildOrderInput = () => [school.trim(), account.trim(), password.trim(), course.trim()].filter(Boolean).join(' ');
   const canSubmit = account.trim() && password.trim();
@@ -191,7 +190,7 @@ export default function Home() {
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-xl shadow-inner">🍑</div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">TaoHua-</h1>
+              <h1 className="text-xl font-bold text-white tracking-tight">桃花代刷</h1>
               <p className="text-white/70 text-xs">自助下单 · 秒速处理</p>
             </div>
           </div>
@@ -210,115 +209,57 @@ export default function Home() {
         </div>
       </header>
 
-
-      {/* 品牌入口 */}
-      {!activeBrand && !search && (
-        <div className="max-w-lg mx-auto px-4 pt-6">
-          <p className="text-xs text-gray-400 font-medium mb-3 px-1">选择学习平台</p>
-          <div className="grid grid-cols-2 gap-3">
-            {BRANDS.map(b => (
-              <button key={b.id} onClick={() => { setActiveBrand(b.id); setSelectedCategory(''); setShowTip(true); }}
-                className="rounded-2xl p-5 text-left transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] bg-white border border-gray-100 hover:border-transparent">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center text-xl mb-3 shadow-sm`}>{b.icon}</div>
-                <p className="text-sm font-bold text-gray-800">{b.name}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 选中品牌后 */}
-      {activeBrand && !search && (
-        <div className="max-w-lg mx-auto px-4 pt-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <button onClick={() => setActiveBrand(null)}
-              className="shrink-0 px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">返回首页</button>
-            {BRANDS.map(b => (
-              <button key={b.id} onClick={() => setActiveBrand(b.id)}
-                className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${activeBrand === b.id ? `bg-gradient-to-r ${b.color} text-white shadow-md` : "bg-gray-50 text-gray-500 hover:bg-gray-100"}`}>{b.icon} {b.name}</button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 搜索标签 */}
-      {search && (
-        <div className="max-w-lg mx-auto px-4 pt-4">
-          <button onClick={() => setSearch('')}
-            className="px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors">清除搜索</button>
-        </div>
-      )}
-
-      {/* 提示弹窗 */}
-      {showTip && (
-        <div className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 animate-in slide-in-from-bottom duration-300">
-          <div className="max-w-sm w-full bg-white rounded-2xl shadow-2xl border border-gray-100 p-5">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl shrink-0">💡</span>
-              <div className="flex-1">
-                <p className="text-sm text-gray-700 leading-relaxed">如有<strong className="text-rose-500">学习强国</strong>、<strong className="text-rose-500">校园跑</strong>、<strong className="text-rose-500">论文服务</strong>等需求，可以点击下方「联系管理员」</p>
-              </div>
-              <button onClick={() => setShowTip(false)} className="shrink-0 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs hover:bg-gray-200 transition-colors">✕</button>
-            </div>
-            <button onClick={() => setShowTip(false)} className="mt-3 w-full py-2 bg-rose-50 text-rose-500 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors">我知道了</button>
-          </div>
-        </div>
-      )}
-
-
-      {/* 分类层级筛选 */}
-      {activeBrand && !search && (() => {
-        const cats = [...new Set((brandProducts[activeBrand] || []).map(p => p.fenleiname))].filter(Boolean);
-        return cats.length > 1 ? (
-          <div className="max-w-lg mx-auto px-4 pt-3">
+      {/* Brand Cards */}
+      {!search && (
+        <div className="max-w-lg mx-auto px-4 -mt-4 relative z-10">
+          <div className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 p-3">
+            <p className="text-xs text-gray-400 px-2 mb-2 font-medium">选择平台</p>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              <button onClick={() => setSelectedCategory('')}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  !selectedCategory ? 'bg-rose-100 text-rose-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}>全部</button>
-              {cats.map(cat => (
-                <button key={cat} onClick={() => setSelectedCategory(cat)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                    selectedCategory === cat ? 'bg-rose-100 text-rose-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                  }`}>{cat}</button>
+              <button onClick={() => setActiveBrand(null)}
+                className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${!activeBrand ? 'bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-md shadow-rose-200 scale-105' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>🔥 全部</button>
+              {BRANDS.map(b => (
+                <button key={b.id} onClick={() => setActiveBrand(activeBrand === b.id ? null : b.id)}
+                  className={`shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${activeBrand === b.id ? `bg-gradient-to-r ${b.color} text-white shadow-md scale-105` : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}>{b.icon} {b.name}</button>
               ))}
             </div>
           </div>
-        ) : null;
-      })()}
-
-      {/* 商品列表 */}
-      {(activeBrand || search) && (
-        <div className="max-w-lg mx-auto px-4 pt-4">
-          {groupedDisplay.length === 0 ? (
-            <div className="text-center py-20">
-              <span className="text-5xl block mb-4">NoData</span>
-              <p className="text-gray-400 text-sm">没有找到相关服务</p>
-            </div>
-          ) : (
-            groupedDisplay.map((group, gi) => (
-              <div key={gi} className="mb-5">
-                <div className="flex items-center gap-2 mb-3 px-1">
-                  {group.brand && (
-                    <div className={`w-7 h-7 rounded-lg ${group.brand.bg} flex items-center justify-center text-sm`}>{group.brand.icon}</div>
-                  )}
-                  <h2 className={`text-sm font-bold ${group.brand ? "text-gray-800" : "text-gray-500"}`}>{group.name}</h2>
-                  <span className="text-xs text-gray-400">{group.products.length} 个</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {group.products.map(p => (
-                    <button key={p.cid} onClick={() => openProduct(p)}
-                      className="group bg-white rounded-2xl p-4 text-left border border-gray-100 hover:border-rose-200 hover:shadow-lg hover:shadow-gray-200/50 hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.98]">
-                      <p className="text-[13px] font-semibold text-gray-800 mb-3 line-clamp-2 leading-snug group-hover:text-rose-600 transition-colors">{p.name}</p>
-                      <span className="text-lg font-bold text-rose-500">¥{p.sellingPrice.toFixed(2)}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))
-          )}
         </div>
       )}
+
+      {/* Product Sections — 按品牌分组 */}
+      <div className="max-w-lg mx-auto px-4 pt-5">
+        {groupedDisplay.length === 0 ? (
+          <div className="text-center py-20">
+            <span className="text-5xl block mb-4">📭</span>
+            <p className="text-gray-400 text-sm">没有找到相关服务</p>
+            <p className="text-gray-300 text-xs mt-1">试试其他关键词或平台</p>
+          </div>
+        ) : (
+          groupedDisplay.map((group, gi) => (
+            <div key={gi} className="mb-5">
+              {/* 分组标题 */}
+              <div className="flex items-center gap-2 mb-3 px-1">
+                {group.brand && (
+                  <div className={`w-7 h-7 rounded-lg ${group.brand.bg} flex items-center justify-center text-sm`}>{group.brand.icon}</div>
+                )}
+                <h2 className={`text-sm font-bold ${group.brand ? 'text-gray-800' : 'text-gray-500'}`}>{group.name}</h2>
+                <span className="text-xs text-gray-400">{group.products.length} 个</span>
+              </div>
+              {/* 商品卡片 */}
+              <div className="grid grid-cols-2 gap-3">
+                {group.products.map(p => (
+                  <button key={p.cid} onClick={() => openProduct(p)}
+                    className="group bg-white rounded-2xl p-4 text-left border border-gray-100 hover:border-rose-200 hover:shadow-lg hover:shadow-gray-200/50 hover:-translate-y-0.5 transition-all duration-200 active:scale-[0.98]">
+                    <p className="text-[13px] font-semibold text-gray-800 mb-3 line-clamp-2 leading-snug group-hover:text-rose-600 transition-colors">{p.name}</p>
+                    <span className="text-lg font-bold text-rose-500">¥{p.sellingPrice.toFixed(2)}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       {/* Purchase Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -488,8 +429,7 @@ export default function Home() {
           <div className="flex">
             <button onClick={() => { setActiveBrand(null); setSearch(''); }} className="flex-1 py-3.5 flex items-center justify-center gap-1.5 text-rose-500 text-sm font-semibold"><span className="text-lg">🏠</span> 首页</button>
             <button onClick={() => window.open('https://xn--ur0ap3x.help/#/query', '_blank')} className="flex-1 py-3.5 flex items-center justify-center gap-1.5 text-gray-400 text-sm font-medium hover:text-gray-600 transition-colors"><span className="text-lg">📋</span> 查单</button>
-          
-            <button onClick={async () => { try { await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: '有用户需要联系管理员 — ' + new Date().toLocaleString() }) }); } catch {} setShowTip(true); }} className="flex-1 py-3.5 flex items-center justify-center gap-1.5 text-rose-400 text-sm font-medium hover:text-rose-500 transition-colors"><span className="text-lg">💬</span> 联系</button></div>
+          </div>
         </div>
       </nav>
     </div>
