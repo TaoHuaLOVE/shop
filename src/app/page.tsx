@@ -52,7 +52,10 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showTip, setShowTip] = useState(false);
 
-  useEffect(() => {
+    // 首页2秒自动弹窗提示
+  useEffect(() => { setShowTip(true); setTimeout(() => setShowTip(false), 2000); }, []);
+
+useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
       .then((d: ProductsResponse) => { if (d.success) setData(d); else setError('获取商品失败'); })
@@ -217,7 +220,7 @@ export default function Home() {
           <p className="text-xs text-gray-400 font-medium mb-3 px-1">选择学习平台</p>
           <div className="grid grid-cols-2 gap-3">
             {BRANDS.map(b => (
-              <button key={b.id} onClick={() => { setActiveBrand(b.id); setSelectedCategory(''); setShowTip(true); }}
+              <button key={b.id} onClick={() => { setActiveBrand(b.id); setSelectedCategory(''); }}
                 className="rounded-2xl p-5 text-left transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] bg-white border border-gray-100 hover:border-transparent">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center text-xl mb-3 shadow-sm`}>{b.icon}</div>
                 <p className="text-sm font-bold text-gray-800">{b.name}</p>
@@ -260,7 +263,7 @@ export default function Home() {
               </div>
               <button onClick={() => setShowTip(false)} className="shrink-0 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs hover:bg-gray-200 transition-colors">✕</button>
             </div>
-            <button onClick={() => setShowTip(false)} className="mt-3 w-full py-2 bg-rose-50 text-rose-500 rounded-xl text-sm font-medium hover:bg-rose-100 transition-colors">我知道了</button>
+
           </div>
         </div>
       )}
@@ -482,6 +485,46 @@ export default function Home() {
         </div>
       )}
 
+
+      {/* 联系管理员表单弹窗 */}
+      {showContactForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowContactForm(false)} />
+          <div className="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-200">
+            <div className="text-center mb-5">
+              <span className="text-3xl block mb-2">💬</span>
+              <h3 className="text-lg font-bold text-gray-900">联系管理员</h3>
+              <p className="text-xs text-gray-400 mt-1">留下你的联系方式和需求，我们会尽快联系你</p>
+            </div>
+            <textarea
+              value={contactMessage}
+              onChange={e => setContactMessage(e.target.value)}
+              placeholder="请输入你的联系方式（QQ/微信/手机号）和具体需求..."
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:border-rose-300 focus:ring-4 focus:ring-rose-50 transition-all resize-none h-32"
+            />
+            <div className="flex gap-3 mt-4">
+              <button onClick={() => { setShowContactForm(false); setContactMessage(''); }}
+                className="flex-1 py-3 bg-gray-100 text-gray-500 font-medium rounded-xl hover:bg-gray-200 transition-colors text-sm">取消</button>
+              <button onClick={async () => {
+                if (!contactMessage.trim()) return;
+                setContactSending(true);
+                try {
+                  await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: contactMessage }) });
+                } catch {}
+                setContactSending(false);
+                setShowContactForm(false);
+                setContactMessage('');
+                alert('已通知管理员，我们会尽快联系你！');
+              }} disabled={!contactMessage.trim() || contactSending}
+                className="flex-[2] py-3 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold rounded-xl hover:from-rose-500 hover:to-pink-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shadow-rose-200 active:scale-[0.98] text-sm">
+                {contactSending ? '发送中...' : '发送'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 inset-x-0 z-40">
         <div className="max-w-lg mx-auto bg-white/80 backdrop-blur-xl border-t border-gray-100 shadow-lg shadow-gray-200/20">
@@ -489,7 +532,7 @@ export default function Home() {
             <button onClick={() => { setActiveBrand(null); setSearch(''); }} className="flex-1 py-3.5 flex items-center justify-center gap-1.5 text-rose-500 text-sm font-semibold"><span className="text-lg">🏠</span> 首页</button>
             <button onClick={() => window.open('https://xn--ur0ap3x.help/#/query', '_blank')} className="flex-1 py-3.5 flex items-center justify-center gap-1.5 text-gray-400 text-sm font-medium hover:text-gray-600 transition-colors"><span className="text-lg">📋</span> 查单</button>
           
-            <button onClick={async () => { try { await fetch('/api/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: '有用户需要联系管理员 — ' + new Date().toLocaleString() }) }); } catch {} setShowTip(true); }} className="flex-1 py-3.5 flex items-center justify-center gap-1.5 text-rose-400 text-sm font-medium hover:text-rose-500 transition-colors"><span className="text-lg">💬</span> 联系</button></div>
+            <button onClick={() => setShowContactForm(true)} className="flex-1 py-3.5 flex items-center justify-center gap-1.5 text-rose-400 text-sm font-medium hover:text-rose-500 transition-colors"><span className="text-lg">💬</span> 联系</button></div>
         </div>
       </nav>
     </div>
