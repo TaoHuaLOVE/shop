@@ -44,3 +44,8 @@ err.html
 err2.html
 page.html
 scrape.mjs
+
+# Local Netlify folder
+.netlify
+
+.vercel
