@@ -1,7 +1,9 @@
 ﻿export interface PendingOrder {
   tradeNo: string;
-  cid: number;
-  input: string;
+  platform: string;
+  user: string;
+  pass: string;
+  kcid: number;
   amount: number;
   status: "pending" | "paid" | "completed";
   createdAt: number;
@@ -12,9 +14,9 @@
 class OrderStore {
   private orders = new Map<string, PendingOrder>();
 
-  create(cid: number, input: string, amount: number, codepayUrl?: string): PendingOrder {
+  create(platform: string, user: string, pass: string, kcid: number, amount: number, codepayUrl?: string): PendingOrder {
     const tradeNo = "SHOP" + Date.now() + Math.random().toString(36).slice(2, 8).toUpperCase();
-    const o: PendingOrder = { tradeNo, cid, input, amount, status: "pending", createdAt: Date.now(), codepayUrl };
+    const o: PendingOrder = { tradeNo, platform, user, pass, kcid, amount, status: "pending", createdAt: Date.now(), codepayUrl };
     this.orders.set(tradeNo, o);
     setTimeout(() => {
       if (this.orders.get(tradeNo)?.status === "pending") this.orders.delete(tradeNo);

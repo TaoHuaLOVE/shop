@@ -51,11 +51,14 @@ export default function Home() {
   const [orderAmount, setOrderAmount] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showTip, setShowTip] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSending, setContactSending] = useState(false);
 
-    // 首页2秒自动弹窗提示
-  useEffect(() => { setShowTip(true); setTimeout(() => setShowTip(false), 2000); }, []);
+      // 首页2秒自动弹窗提示（等加载完成后再弹出）
+  useEffect(() => { if (!loading) { setShowTip(true); setTimeout(() => setShowTip(false), 2000); } }, [loading]);
 
-useEffect(() => {
+  useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
       .then((d: ProductsResponse) => { if (d.success) setData(d); else setError('获取商品失败'); })
@@ -94,14 +97,13 @@ useEffect(() => {
 
   const createOrder = async () => {
     if (!selectedProduct) return;
-    const input = buildOrderInput();
-    if (!input) return;
+    if (!account.trim() || !password.trim()) return;
     setSubmitting(true);
     try {
       const res = await fetch('/api/orders?action=create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cid: selectedProduct.cid, input, amount: selectedProduct.sellingPrice, productName: selectedProduct.name }),
+        body: JSON.stringify({ kcid: selectedProduct.cid, user: account.trim(), pass: password.trim(), amount: selectedProduct.sellingPrice, productName: selectedProduct.name }),
       });
       const result = await res.json();
       if (result.success) {
@@ -149,7 +151,7 @@ useEffect(() => {
       const res = await fetch('/api/courses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cid: selectedProduct.cid, account: account.trim(), password: password.trim(), school: school.trim() }),
+        body: JSON.stringify({ kcid: selectedProduct.cid, user: account.trim(), pass: password.trim(), school: school.trim() }),
       });
       const result = await res.json();
       if (result.success) setCourseResults(result.courses || []);

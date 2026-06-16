@@ -20,12 +20,13 @@ export async function POST(request: Request) {
 
 async function handleCreate(request: Request) {
   try {
-    const { cid, input, amount, productName } = await request.json();
-    if (!cid || !input || !amount) {
+    const { kcid, user, pass, amount, productName, platform: plat } = await request.json();
+    if (!kcid || !user || !pass || !amount) {
       return NextResponse.json({ success: false, error: "参数缺失" }, { status: 400 });
     }
 
-    const order = orderStore.create(cid, input, amount);
+    const platform = plat || process.env.UPSTREAM_PLATFORM || "15668";
+    const order = orderStore.create(platform, user, pass, kcid, amount);
 
     const proto = request.headers.get("x-forwarded-proto") || "https";
     const host = request.headers.get("host") || "taohua.netlify.app";
@@ -86,7 +87,7 @@ async function handleConfirm(request: Request) {
       return NextResponse.json({ success: false, error: "订单不存在或已处理" }, { status: 400 });
     }
 
-    const result = await pushUpstream(order.cid, order.input);
+    const result = await pushUpstream(order.platform, order.user, order.pass, order.kcid);
     orderStore.complete(tradeNo, result.rawText);
 
     return NextResponse.json({

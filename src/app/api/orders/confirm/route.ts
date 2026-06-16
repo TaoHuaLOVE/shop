@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   if (!order) return new Response("ok");
 
   try {
-    const result = await pushUpstream(order.cid, order.input);
+    const result = await pushUpstream(order.platform, order.user, order.pass, order.kcid);
     orderStore.complete(tradeNo, result.rawText);
     console.log("[epay callback] upstream result:", result.success, result.message);
   } catch (e) {

@@ -1,26 +1,29 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 const UPSTREAM_URL = process.env.UPSTREAM_API_URL!;
 const UID = process.env.UPSTREAM_UID!;
 const KEY = process.env.UPSTREAM_KEY!;
+const DEFAULT_PLATFORM = process.env.UPSTREAM_PLATFORM || "15668";
 
 export async function POST(request: Request) {
-  let cid: number;
-  let account: string;
-  let password: string;
+  let kcid: number;
+  let user: string;
+  let pass: string;
   let school: string;
+  let platform: string;
 
   try {
     const body = await request.json();
-    cid = body.cid;
-    account = body.account;
-    password = body.password;
+    kcid = body.kcid || body.cid;
+    user = body.user || body.account;
+    pass = body.pass || body.password;
     school = body.school || "";
+    platform = body.platform || DEFAULT_PLATFORM;
   } catch {
     return NextResponse.json({ success: false, error: "请求格式错误" }, { status: 400 });
   }
 
-  if (!cid || !account || !password) {
+  if (!user || !pass) {
     return NextResponse.json({ success: false, error: "请填写账号和密码" }, { status: 400 });
   }
 
@@ -28,10 +31,10 @@ export async function POST(request: Request) {
     const upstreamBody = new URLSearchParams({
       uid: UID,
       key: KEY,
-      user: account,
-      pass: password,
-      platform: String(cid),
-      kcid: "0",
+      user: user,
+      pass: pass,
+      platform: platform,
+      kcid: String(kcid || 0),
     });
     if (school) upstreamBody.set("school", school);
 

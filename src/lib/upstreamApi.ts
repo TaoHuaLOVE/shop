@@ -51,9 +51,10 @@ export async function upstreamApi<T = unknown>(params: UpstreamParams): Promise<
 
 /**
  * 推送到上游下单
- * 调用上游 ?act=add，返回 { success, message, orderId }
+ * 调用上游 ?act=add，参数: platform, user, pass, kcid
+ * 成功码: code === "0"
  */
-export async function pushUpstream(cid: number, input: string): Promise<{
+export async function pushUpstream(platform: string, user: string, pass: string, kcid: number): Promise<{
   success: boolean;
   message: string;
   orderId?: string;
@@ -63,8 +64,10 @@ export async function pushUpstream(cid: number, input: string): Promise<{
     const body = new URLSearchParams({
       uid: UID,
       key: KEY,
-      cid: String(cid),
-      input: input,
+      platform: platform,
+      user: user,
+      pass: pass,
+      kcid: String(kcid),
     });
     const res = await fetch(UPSTREAM_URL + "?act=add", {
       method: "POST",
@@ -81,7 +84,8 @@ export async function pushUpstream(cid: number, input: string): Promise<{
       upstream = { msg: "上游异常", code: -1 };
     }
 
-    const ok = upstream.code === "1" || upstream.code === 1;
+    // code === "0" 或 0 表示成功
+    const ok = upstream.code === "0" || upstream.code === 0;
     return {
       success: ok,
       message: upstream.msg || (ok ? "下单成功" : "下单失败"),

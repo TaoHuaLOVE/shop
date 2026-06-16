@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 
-const SERVERCHAN_KEY = process.env.SERVERCHAN_KEY!;
+const SERVERCHAN_KEY = process.env.SERVERCHAN_KEY || "";
 
 export async function POST(request: Request) {
   try {
@@ -14,6 +14,7 @@ export async function POST(request: Request) {
       body: new URLSearchParams({ title, desp }).toString(),
     });
     const text = await res.text();
+    console.log("[notify] KEY exists:", !!SERVERCHAN_KEY, "length:", SERVERCHAN_KEY.length);
     console.log("[notify] Server酱:", text);
 
     const data = JSON.parse(text);
