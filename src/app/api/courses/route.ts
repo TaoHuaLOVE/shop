@@ -51,7 +51,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "上游服务异常" }, { status: 502 });
     }
 
-    if ((upstream.code === "1" || upstream.code === 1) && upstream.data && upstream.data.length > 0) {
+        // 检查 code 是否为 1，且 data 非空
+    const isGetOk = (upstream.code === "1" || upstream.code === 1);
+    if (isGetOk && upstream.data && upstream.data.length > 0) {
       return NextResponse.json({
         success: true,
         courses: upstream.data || [],
@@ -59,7 +61,8 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ success: false, error: upstream.msg || "查询失败" });
+    const errMsg = (!isGetOk) ? (upstream.msg || "查询失败") : "账号密码错误或该平台暂无可刷课程";
+    return NextResponse.json({ success: false, error: errMsg });
   } catch (error) {
     console.error("[/api/courses]", error);
     return NextResponse.json({ success: false, error: "查询失败，请稍后重试" }, { status: 500 });
