@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "上游服务异常" }, { status: 502 });
     }
 
-    if (upstream.code === "1" || upstream.code === 1) {
+    if ((upstream.code === "1" || upstream.code === 1) && upstream.data && upstream.data.length > 0) {
       return NextResponse.json({
         success: true,
         courses: upstream.data || [],

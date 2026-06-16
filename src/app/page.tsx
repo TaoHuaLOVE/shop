@@ -412,11 +412,20 @@ export default function Home() {
               {/* Step: Verify */}
               {step === 'verify' && (
                 <>
-                  <div className="text-center mb-5">
-                    <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center"><span className="text-2xl">{courseError ? '❌' : '✅'}</span></div>
-                    <h3 className="text-lg font-bold text-gray-900">{courseError ? '验证失败' : '账号验证通过'}</h3>
-                    <p className="text-sm text-gray-400 mt-1">{courseError ? '请检查账号密码后重试' : `找到 ${courseResults.length} 门课程，请选择`}</p>
-                  </div>
+                  {(() => {
+                    const isFail = !!courseError || courseResults.length === 0;
+                    return (
+                      <div className="text-center mb-5">
+                        <div className={`w-14 h-14 mx-auto mb-3 rounded-2xl flex items-center justify-center ${isFail ? 'bg-gradient-to-br from-red-100 to-rose-100' : 'bg-gradient-to-br from-green-100 to-emerald-100'}`}>
+                          <span className="text-2xl">{isFail ? '❌' : '✅'}</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900">{isFail ? '验证失败' : '账号验证通过'}</h3>
+                        <p className="text-sm text-gray-400 mt-1">
+                          {courseError ? '请检查账号密码后重试' : courseResults.length > 0 ? `找到 ${courseResults.length} 门课程，请选择` : '账号密码可能有误，或该平台暂无可用课程'}
+                        </p>
+                      </div>
+                    );
+                  })()}
                   {courseError ? (
                     <div className="bg-red-50 rounded-2xl p-4 mb-5 border border-red-100">
                       <p className="text-sm text-red-500 text-center">{courseError}</p>
@@ -432,14 +441,14 @@ export default function Home() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-6 mb-5 bg-gray-50 rounded-2xl">
+                    <div className="text-center py-6 mb-5 bg-red-50 rounded-2xl border border-red-100">
                       <span className="text-4xl block mb-3">📭</span>
-                      <p className="text-sm text-gray-500">该平台未找到课程</p>
-                      <p className="text-xs text-gray-400 mt-1">可能暂未开课，请联系管理员</p>
+                      <p className="text-sm text-red-500 font-medium">未找到任何课程</p>
+                      <p className="text-xs text-gray-500 mt-1">账号或密码错误，或者该平台暂无可刷课程</p>
                     </div>
                   )}
                   <div className="flex gap-3">
-                    <button onClick={() => { setStep('form'); setVerified(false); }} className="flex-1 py-3.5 bg-gray-100 text-gray-600 font-medium rounded-2xl hover:bg-gray-200 transition-colors text-sm">返回修改</button>
+                    <button onClick={() => { setStep('form'); setVerified(false); setCourseError(''); }} className="flex-1 py-3.5 bg-gray-100 text-gray-600 font-medium rounded-2xl hover:bg-gray-200 transition-colors text-sm">返回修改</button>
                     <button onClick={() => setStep('confirm')} disabled={!!courseError || courseResults.length === 0}
                       className="flex-[2] py-3.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold rounded-2xl hover:from-rose-500 hover:to-pink-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-rose-200 active:scale-[0.98] text-sm">
                       确认下单 · ¥{selectedProduct?.sellingPrice?.toFixed(2) || '--'}
