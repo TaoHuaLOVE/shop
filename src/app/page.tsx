@@ -43,7 +43,7 @@ export default function Home() {
   const [courseResults, setCourseResults] = useState<CourseItem[]>([]);
   const [courseError, setCourseError] = useState('');
 
-  const [step, setStep] = useState<'form' | 'confirm' | 'payment' | 'result'>('form');
+  const [step, setStep] = useState<'form' | 'verify' | 'confirm' | 'payment' | 'result'>('form');
   const [submitting, setSubmitting] = useState(false);
   const [orderResult, setOrderResult] = useState<{ success: boolean; message: string; orderId?: string } | null>(null);
   const [tradeNo, setTradeNo] = useState('');
@@ -54,6 +54,7 @@ export default function Home() {
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactMessage, setContactMessage] = useState('');
   const [contactSending, setContactSending] = useState(false);
+  const [verified, setVerified] = useState(false);
 
       // 首页2秒自动弹窗提示（等加载完成后再弹出）
   useEffect(() => { if (!loading) { setShowTip(true); setTimeout(() => setShowTip(false), 2000); } }, [loading]);
@@ -154,8 +155,8 @@ export default function Home() {
         body: JSON.stringify({ kcid: selectedProduct.cid, user: account.trim(), pass: password.trim(), school: school.trim() }),
       });
       const result = await res.json();
-      if (result.success) setCourseResults(result.courses || []);
-      else setCourseError(result.error || '查询失败');
+      if (result.success) { setCourseResults(result.courses || []); setVerified(true); setStep('verify'); }
+      else { setCourseError(result.error || '查询失败'); setVerified(false); }
     } catch { setCourseError('网络错误'); }
     finally { setCourseLoading(false); }
   };
@@ -163,10 +164,10 @@ export default function Home() {
   const openProduct = (p: Product) => {
     setSelectedProduct(p); setSchool(''); setAccount(''); setPassword(''); setCourse('');
     setShowCourseSearch(false); setCourseResults([]); setCourseError('');
-    setStep('form'); setOrderResult(null); setTradeNo(''); setQrcode(''); setOrderAmount(0);
+    setStep('form'); setOrderResult(null); setTradeNo(''); setQrcode(''); setOrderAmount(0); setVerified(false);
   };
 
-  const stepLabels = ['填写信息', '确认订单', '扫码支付', '完成'];
+  const stepLabels = ['填写信息', '验证账号', '确认订单', '扫码支付', '完成'];
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-white">
@@ -403,7 +404,47 @@ export default function Home() {
                       )}
                     </div>
                   </div>
-                  <button onClick={() => setStep('confirm')} disabled={!canSubmit} className="mt-6 w-full py-3.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold rounded-2xl hover:from-rose-500 hover:to-pink-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-rose-200 active:scale-[0.98] text-base tracking-wide">下一步</button>
+                  <button onClick={searchCourses} disabled={!canSubmit || courseLoading} className="mt-6 w-full py-3.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold rounded-2xl hover:from-rose-500 hover:to-pink-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-rose-200 active:scale-[0.98] text-base tracking-wide">{courseLoading ? <span className="flex items-center justify-center gap-2"><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />验证中...</span> : "🔍 验证账号并查课"}</button>
+                </>
+              )}
+
+              
+              {/* Step: Verify */}
+              {step === 'verify' && (
+                <>
+                  <div className="text-center mb-5">
+                    <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center"><span className="text-2xl">{courseError ? '❌' : '✅'}</span></div>
+                    <h3 className="text-lg font-bold text-gray-900">{courseError ? '验证失败' : '账号验证通过'}</h3>
+                    <p className="text-sm text-gray-400 mt-1">{courseError ? '请检查账号密码后重试' : `找到 ${courseResults.length} 门课程，请选择`}</p>
+                  </div>
+                  {courseError ? (
+                    <div className="bg-red-50 rounded-2xl p-4 mb-5 border border-red-100">
+                      <p className="text-sm text-red-500 text-center">{courseError}</p>
+                    </div>
+                  ) : courseResults.length > 0 ? (
+                    <div className="space-y-1 max-h-52 overflow-y-auto mb-5 bg-gray-50 rounded-2xl p-1">
+                      {courseResults.map((item, i) => {
+                        const cname = item.kcname || item.name || '';
+                        return (
+                          <button key={i} onClick={() => { setCourse(cname); }}
+                            className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all ${course === cname ? 'bg-rose-50 text-rose-600 font-semibold border border-rose-200 shadow-sm' : 'text-gray-600 hover:bg-white border border-transparent'}`}>{cname}</button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 mb-5 bg-gray-50 rounded-2xl">
+                      <span className="text-4xl block mb-3">📭</span>
+                      <p className="text-sm text-gray-500">该平台未找到课程</p>
+                      <p className="text-xs text-gray-400 mt-1">可能暂未开课，请联系管理员</p>
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <button onClick={() => { setStep('form'); setVerified(false); }} className="flex-1 py-3.5 bg-gray-100 text-gray-600 font-medium rounded-2xl hover:bg-gray-200 transition-colors text-sm">返回修改</button>
+                    <button onClick={() => setStep('confirm')} disabled={!!courseError || courseResults.length === 0}
+                      className="flex-[2] py-3.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white font-semibold rounded-2xl hover:from-rose-500 hover:to-pink-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg shadow-rose-200 active:scale-[0.98] text-sm">
+                      确认下单 · ¥{selectedProduct?.sellingPrice?.toFixed(2) || '--'}
+                    </button>
+                  </div>
                 </>
               )}
 
